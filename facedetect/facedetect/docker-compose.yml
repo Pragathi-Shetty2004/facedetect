@@ -1,0 +1,78 @@
+version: "3.9"
+
+# ── Named volumes ──────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+
+# ── Networks ───────────────────────────────────────────────────────────────────
+networks:
+  internal:          # backend ↔ db (not exposed)
+  external:          # frontend ↔ backend (nginx proxies)
+
+# ── Services ───────────────────────────────────────────────────────────────────
+services:
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       facedetect
+      POSTGRES_USER:     facedetect
+      POSTGRES_PASSWORD: facedetect
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U facedetect -d facedetect"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # DB port NOT exposed to host in production; only backend can reach it
+
+  # ── FastAPI backend ───────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    restart: unless-stopped
+    environment:
+      DATABASE_URL:    postgresql+asyncpg://facedetect:facedetect@db:5432/facedetect
+      APP_ENV:         production
+      SECRET_KEY:      ${SECRET_KEY:-change-me-in-production}
+      CORS_ORIGINS:    '["http://localhost", "http://frontend"]'
+    networks:
+      - internal
+      - external
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    # Backend NOT directly exposed – all traffic via nginx frontend
+
+  # ── React frontend (nginx) ────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - external
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
