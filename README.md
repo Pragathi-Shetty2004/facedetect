@@ -114,49 +114,7 @@ facedetect/
 
 ---
 
-## ⚠️ Common Issues & Fixes
 
-### ❌ Docker build fails at `npm run build`
-
-✔ Fix TypeScript version in `frontend/package.json`:
-
-```json
-"typescript": "4.9.5"
-```
-
-Then run:
-
-```bash
-rm -rf node_modules package-lock.json
-docker compose up --build
-```
-
----
-
-### ❌ Docker error: no configuration file
-
-✔ Make sure you're inside project folder:
-
-```bash
-cd facedetect
-```
-
----
-
-### ❌ Camera not working
-
-✔ Allow browser camera permissions
-
----
-
-## 🔐 Security Notes
-
-* Backend not exposed directly (via Nginx)
-* Database port hidden in production
-* File upload size limit: 10MB
-* Runs as non-root user in container
-
----
 
 ## 🧪 Development Mode
 
