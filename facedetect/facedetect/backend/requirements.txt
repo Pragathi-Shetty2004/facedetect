@@ -12,7 +12,7 @@ alembic==1.14.0
 pydantic-settings==2.6.1
 
 # ── Face detection (NO OpenCV) ────────────────────────────────────────────────
-mediapipe==0.10.18
+mediapipe>=0.10.30
 numpy==1.26.4
 Pillow==11.0.0
 

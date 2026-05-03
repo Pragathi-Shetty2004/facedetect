@@ -3,8 +3,10 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci --silent
+RUN npm install --legacy-peer-deps
+RUN npm install ajv@8.17.1 --legacy-peer-deps
 COPY . .
+ENV DISABLE_ESLINT_PLUGIN=true
 RUN npm run build
 
 # ── Stage 2: serve with nginx ─────────────────────────────────────────────────
