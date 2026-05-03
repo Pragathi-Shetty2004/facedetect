@@ -19,7 +19,7 @@ A full-stack, containerized application that captures live webcam input, detects
 
 ```bash
 # 1. Clone repository
-git clone <your-repo-url>
+git clone https://github.com/Pragathi-Shetty2004/facedetect.git
 cd facedetect
 
 # 2. Setup environment
